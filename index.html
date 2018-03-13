@@ -1,0 +1,267 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<title>Energy and Power in America</title>
+	<meta charset="utf-8">
+	<meta name="description" content="Energy and Power in America">
+	<meta name="author" content="Cathryn Ploehn">
+
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css"/>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.11/semantic.css">
+	<link rel="stylesheet" href="font/stylesheet.css">
+	<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+	<div id="sidebar">
+		<div id="header">
+			<h1>Energy facilities in America</h1>
+			<div id="errorMsg"></div>
+		</div>
+		<div id="searchResults">
+		</div>
+		<div id="toggle-type">
+				<div class="ui active text loader">Fetching facilities</div>
+		</div>
+		<div id="toggle-race">
+				<div class="ui active text loader">Fetching demographics</div>
+		</div>
+	</div>
+	<div id="map"></div>
+
+	<script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+	<script	src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/1.3.4/chroma.min.js"></script>
+	<script src="render-queue.js"></script>
+	<script type="text/javascript" >
+		var counties, demographics, facilities; // data
+		var countyLayer; // Leaflet layer for counties 
+
+		// Facility types
+		var types = {"1":{name:"nuclear", num:0, filtered: false }, "2":{name:"coal", num:1, filtered: false }, "3":{name:"oil", num:2, filtered: false }, "4":{name:"gas", num:3, filtered: false }, "5":{name:"oil refinery", num:4, filtered: false }, "7":{name:"LNG", num:5, filtered: false }, "8":{name:"Ethanol", num:6, filtered: false }, "10":{name:"Trash", num:11, filtered: false }, "11": {name:"Biomass", num:8, filtered: false }, "12":{name:"Poultry", num:9, filtered: false }, "13":{name:"Tire", num:10, filtered: false }, "15":{name:"landfill", num:17, filtered: false }, "16":{name:"landfill gas", num:12, filtered: false }, "17":{name:"hydro", num:7, filtered: false }, "18":{name:"geothermal", num:14, filtered: false },"19":{name:"wind", num:13, filtered: false }, "20":{name:"solar", num:16, filtered: false },"21":{name:"sewage incinerator", num:15, filtered: false }};
+
+		// Color facility based on type
+		var colors = ["#f08890","#77eb1d","#e465ff","#e3ff56","#ff3eb8","#00b144","#a2309a","#00e9b9","#e20064","#019364","#e54900","#92b367","#be2216","#ffe385","#ba5a7f","#9c8300","#a34529","#b87800"];
+		
+		// Race types
+		var races = {
+			"wht":{
+				id: "HD02_S100",
+				name: "White"
+			},
+			"afr":{
+				id: "HD02_S101",
+				name: "African American"
+			},
+			"ind":{
+				id: "HD02_S102",
+				name: "American Indian & Alaska Native"
+			},
+			"as": {
+				id: "HD02_S103",
+				name: "Asian"
+			},
+			"nat":{
+				id: "HD02_S104",
+				name: "Native Hawaiian & Pacific Islander"
+			},
+			"oth":{
+				id: "HD02_S105",
+				name: "Other"
+			}
+		};
+
+		// Color counties based on race percentage
+		var bwScale = chroma.scale(['black' ,'white']);
+		
+		// Initialize map
+		var map = L.map('map', {
+    		renderer: L.canvas()
+		}).setView([37.055177106660814, -99.27246093750001], 5);	
+
+		$('#map .leaflet-map-pane').append('<canvas id="overlay"></canvas>'); // Add as an overlay layer within the map
+		
+		var canvas = document.getElementById("overlay");
+			canvas.width  = window.innerWidth;
+			canvas.height = window.innerHeight;
+		var ctx = canvas.getContext("2d");
+
+		map.on("move", function(){
+			var trans = $('.leaflet-map-pane').css('transform').split(',');
+			$('#overlay').attr('style', function(){
+				return 'transform: translate3d(' + trans[4] * -1 + 'px , ' + trans[5].substring(0, trans[5].length -1) * -1 + 'px , 0px)'; // Prevent leaflet from transforming this layer
+			});
+			drawCircles();
+		});
+
+		L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.{ext}', {
+			attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+			subdomains: 'abcd',
+			minZoom: 0,
+			maxZoom: 20,
+			ext: 'png'
+		}).addTo(map);
+
+		// Get facilities
+		$.getJSON("facilities.json"
+		).done(function(data) {
+			facilities = data;
+			drawCircles();
+			
+			// Initialize show/hide interaction
+			$('#toggle-type').html('<div class="toggle-all"><h2>facility type</h2><div class="ui toggle checkbox"><input type="checkbox" name="public" checked><label>Hide all</label></div></div>');
+			for(type in types){
+				$('#toggle-type').append('<button typeIndex='+type+' style="background-color:'+ colors[types[type].num] +'" class="compact ui button type typeIndex-'+type+'">'+ types[type].name +'</button>');
+			}
+
+			$('#toggle-type .toggle-all').change(function(e){
+				var on = $(e.target).is(':checked');
+				if(on) {
+					$('.toggle-all label').html("Hide all");
+				} else {
+					$('.toggle-all label').html("Show all");
+				}
+				for(type in types){
+					var buttonClass = ".typeIndex-"+type;
+					types[type].filtered = !on;
+					if(!on){
+						$(buttonClass).addClass('filtered');
+					} else {
+						$(buttonClass).removeClass('filtered');
+					}
+				}
+				drawCircles();
+			});
+
+			$('.type').click(function(e){
+				var type = $(e.target).attr('typeIndex');
+				types[type].filtered = !types[type].filtered;
+				if(types[type].filtered){
+					$(e.target).addClass('filtered');
+				} else {
+					$(e.target).removeClass('filtered');
+				}
+				drawCircles();
+			});
+
+			// Initialize popup interaction
+			$('#map').click(function(e){
+				var offset = [e.offsetX, e.offsetY],
+					zoom = map.getZoom(),
+					r = 0.6 * zoom, 
+					coord = map.containerPointToLatLng(offset);
+				for(plant in facilities){
+					if(!types[facilities[plant]["iLayervisible"]].filtered){
+						var loc = [facilities[plant].fLa, facilities[plant].fLo];
+						loc = map.latLngToContainerPoint(loc);
+						var topLeft = [loc.x - r, loc.y + r];
+						topLeft = map.containerPointToLatLng(topLeft);
+						var bottomRight = [loc.x + r, loc.y -r];
+						bottomRight = map.containerPointToLatLng(bottomRight);
+						var bounds = L.latLngBounds(topLeft, bottomRight); 
+						if(bounds.contains(coord)){
+							var popup =  L.popup()
+							    .setLatLng([facilities[plant].fLa, facilities[plant].fLo])
+							    .setContent('<h4>' + facilities[plant].sNa + '</h4>' + types[facilities[plant]["iLayervisible"]]["name"]);
+							map.openPopup(popup);
+							break;
+						}
+					}
+				}
+			});
+
+		}).fail(function(e){
+			console.log(e);
+		})
+
+		// Get county demographics
+		$.when(
+			$.getJSON("counties.json").done(function(data) {
+				counties = data;
+			}).fail(function(e){
+			}),
+			$.getJSON("race.json").done(function(data) {
+				demographics = data;
+			}).fail(function(e){
+				console.log(e);
+			})
+		).then(function(){
+			countyLayer = L.geoJson(counties, {
+			  	style: function(feature){
+			  		return {
+			  			opacity: 0,
+			  			color: "transparent",
+			  			fillColor: "transparent",
+			  			fillOpacity: 0.8
+			  		}
+			  	},
+	  		}).addTo(map);
+
+			// Initialize show/hide interaction
+			$('#toggle-race').html('<div class="toggle-all"><h2>race</h2></div>');
+			for(r in races){
+				$('#toggle-race').append('<button raceIndex='+r+' class="compact ui button race '+r+' filtered">'+ races[r].name +'</button>');
+			}
+
+	  		$(".race").click(function(e){
+				var race = $(e.target).attr('raceIndex');
+				var className = '.' + race;
+				var id = races[race].id;
+				if(!$(className).hasClass('filtered')){
+					$(".race").addClass('filtered');
+					countyLayer.setStyle({ fillOpacity: 0 });
+				} else {
+					$(".race").addClass('filtered');
+					$(className).removeClass('filtered');
+					countyLayer.setStyle(function(feature){
+				  		var percent = demographics[feature.properties.GEO_ID]? demographics[feature.properties.GEO_ID][0][races[race].id]: 0;
+				  		var color = bwScale(percent/100);
+				  		return {
+				  			opacity: 0,
+				  			color: "white",
+				  			weight: 0.5,
+				  			fillColor: color,
+				  			fillOpacity: 0.5
+				  		}
+				  	});
+				}
+			});
+
+		});
+
+		// Animation for facility canvas layer
+		var render = renderQueue(circle).clear(clear_canvas); // add data to be rendered. Maximizes amount of data that can be rendered in browser  
+		
+		function drawCircles() {
+			var array = [];
+			for(plant in facilities) {
+				array.push(plant);
+			}
+			render(array); // Add data to queue for rendering
+		}
+
+		function circle(plant){
+			if(!types[facilities[plant]["iLayervisible"]]["filtered"]) {
+				var type = types[facilities[plant]["iLayervisible"]]["num"],
+					color = chroma(colors[type]).rgb(),
+					latlng = L.latLng(facilities[plant].fLa, facilities[plant].fLo),
+					bounds = map.getBounds();
+				ctx.fillStyle = "rgba(" + color[0] + ", " + color[1] + ", " + color[2] + ",0.7)";
+				if(bounds.contains(latlng)){
+					var loc = map.latLngToContainerPoint(latlng);
+					var zoom = map.getZoom();
+					ctx.beginPath();
+					ctx.arc(loc.x,loc.y,0.5 * zoom,0, Math.PI*2, true);
+					ctx.closePath();
+					ctx.fill();
+				}
+			}
+		}
+
+		function clear_canvas() {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+		}
+	</script>
+</body>
+</html>

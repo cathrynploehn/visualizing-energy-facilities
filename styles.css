@@ -1,0 +1,165 @@
+html, body, #map, .loader {
+  position: absolute;
+  top: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: black;
+  color: white;
+  font-family: Courier;
+  font-size: 16px; }
+
+#overlay {
+  position: absolute;
+  z-index: 1000;
+  background-color: transparent; }
+
+h1, h2, h3, h4 {
+  font-family: 'zigguratmedium_italic';
+  margin-bottom: 0px; }
+
+input::-moz-selection, ::-moz-selection {
+  background: white;
+  color: black; }
+
+input::selection, ::selection {
+  background: white;
+  color: black; }
+
+#sidebar {
+  width: 100%;
+  max-width: 500px; }
+
+#header, #toggle-type, #toggle-race {
+  padding: 10px 15px;
+  background: rgba(0, 0, 0, 0.8);
+  margin: 10px;
+  border: 1px solid white; }
+  #header h1, #toggle-type h1, #toggle-race h1 {
+    font-size: 2.7em;
+    line-height: 1em; }
+
+#toggle-type, #toggle-race {
+  margin: 10px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  padding: 0px; }
+  #toggle-type button, #toggle-race button {
+    background-color: #444; }
+  #toggle-type button, #toggle-type .toggle-all, #toggle-race button, #toggle-race .toggle-all {
+    width: 50%;
+    border: 0.5px solid white;
+    margin: 0px;
+    padding: 5px;
+    text-shadow: 1px 1px 0px rgba(96, 63, 0, 0.9); }
+  #toggle-type .toggle-all, #toggle-race .toggle-all {
+    width: 100%;
+    padding: 5px 10px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between; }
+    #toggle-type .toggle-all h2, #toggle-race .toggle-all h2 {
+      margin: 0; }
+
+.filtered {
+  background-color: rgba(0, 0, 0, 0.5) !important; }
+
+.ui.input input, .ui.input input:focus, .ui.input.error input, .ui.input.error input:focus {
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid white;
+  color: white;
+  font-family: Courier; }
+
+.ui.input {
+  color: white; }
+
+.ui.negative.message {
+  background-color: #b53131;
+  color: white; }
+  .ui.negative.message .header {
+    color: white; }
+
+.ui.negative.message, .ui.attached.negative.message {
+  -webkit-box-shadow: 0px 0px 0px 0px #de8c8c inset, 0px 0px 0px 0px transparent;
+  box-shadow: 0px 0px 0px 0px #de8c8c inset, 0px 0px 0px 0px transparent; }
+
+.ui.button, .ui.button:focus {
+  font-family: Courier;
+  border-radius: 0px;
+  color: white; }
+  .ui.button:hover, .ui.button:focus:hover {
+    opacity: 0.9;
+    color: white; }
+
+.ui.toggle.checkbox label, .ui.toggle.checkbox input:checked ~ label, .ui.checkbox input:focus ~ label, .ui.toggle.checkbox input:focus:checked ~ .box, .ui.toggle.checkbox input:focus:checked ~ label {
+  color: white !important; }
+
+.leaflet-popup {
+  font-family: Courier; }
+
+.leaflet-popup-content-wrapper {
+  background: rgba(0, 0, 0, 0.8);
+  padding: 0px;
+  color: white;
+  -webkit-box-shadow: 0 3px 14px transparent;
+  box-shadow: 0 3px 14px transparent;
+  border-radius: 0px;
+  border: 3px solid white; }
+
+.leaflet-popup-content {
+  margin: 10px 20px; }
+
+.leaflet-tooltip {
+  background-color: transparent;
+  border-radius: 0px;
+  border: 0 solid rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0 3px 14px transparent;
+  box-shadow: 0 3px 14px transparent;
+  font-size: 5em;
+  line-height: 1em;
+  color: white;
+  -webkit-text-fill-color: transparent;
+  /* Will override color (regardless of order) */
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: white;
+  font-family: 'zigguratmedium_italic'; }
+
+.leaflet-tooltip-tip {
+  display: none; }
+
+.leaflet-popup-tip {
+  width: 3px;
+  height: 13px;
+  padding: 1px;
+  margin: 0px auto 0;
+  -webkit-transform: rotate(0deg);
+  -moz-transform: rotate(0deg);
+  -ms-transform: rotate(0deg);
+  -o-transform: rotate(0deg);
+  transform: rotate(0deg);
+  background: white; }
+
+a, a:hover, .leaflet-container a {
+  color: white; }
+
+.leaflet-container a.leaflet-popup-close-button {
+  color: white; }
+
+.leaflet-tile {
+  -webkit-filter: invert(1);
+  filter: invert(1);
+  opacity: 0.2 !important; }
+
+.leaflet-popup-pane {
+  z-index: 1001; }
